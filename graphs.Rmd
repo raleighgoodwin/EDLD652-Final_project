@@ -1,0 +1,160 @@
+# This is the data from an experiment. The IV is the experimenal condition with 4 levels. Its moderator is General Conspiracy Belief. The DV will be changed in each graph.
+
+```{r}
+library(tidyverse)
+library(gghighlight)
+library(here)
+```
+
+```{r}
+data <- read.csv(here("data.csv"))
+```
+
+# Create Plot 1: DV is Intention to vaccinate their fictional children.
+
+```{r}
+data %>% ggplot(aes(ï..GenConBlf, VacIntMMR))+
+  geom_point(aes(color = Condition), alpha = .3)+
+  geom_smooth(aes(color = Condition), method = "lm", se = FALSE)+
+  labs(title = "Do parents with conspiracy belief intent to vaccinate their child?",
+       subtitle = "An experiment of different message types",
+       x = "MMR vaccination intention",
+       y = "Level of general conspiracy belief")+
+  scale_color_manual(values = c("orchid", "salmon", "darkturquoise", "chartreuse3"),
+                     name = "Message Type", 
+                     breaks =  c("Control", "Fact", "Narrative", "Hybrid"),
+                     labels = c("No exposure", "Scientific Fact", "Narrative", "Hybrid"))+
+  theme_minimal()
+  
+```
+
+#Let's look at each condition separately. I might create an animation at the end.
+#This graph is for Control Condition.
+```{r}
+data %>% 
+  ggplot(aes(ï..GenConBlf, VacIntMMR))+
+  geom_point(color = "grey80")+
+  geom_point(data = filter(data, Condition == "Control"), color = "orchid")+
+  geom_smooth(data = subset(data, Condition == "Control"), method = "lm", color = "orchid", se = FALSE)+
+  labs(title = "Do parents with conspiracy belief intent to vaccinate their child?",
+       subtitle = "An experiment of different message types",
+       x = "MMR vaccination intention",
+       y = "Level of general conspiracy belief")+
+  theme_minimal()
+```
+
+# This graph is for Fact Condition
+```{r}
+data %>% 
+  ggplot(aes(ï..GenConBlf, VacIntMMR))+
+  geom_point(color = "grey80")+
+  geom_point(data = filter(data, Condition == "Fact"), color = "salmon")+
+  geom_smooth(data = subset(data, Condition == "Fact"), method = "lm", color = "salmon", se = FALSE)+
+  labs(title = "Do parents with conspiracy belief intent to vaccinate their child?",
+       subtitle = "An experiment of different message types",
+       x = "MMR vaccination intention",
+       y = "Level of general conspiracy belief")+
+  theme_minimal()
+```
+
+#This graph is for Narrative Condition
+```{r}
+data %>% 
+  ggplot(aes(ï..GenConBlf, VacIntMMR))+
+  geom_point(color = "grey80")+
+  geom_point(data = filter(data, Condition == "Narrative"), color = "darkturquoise")+
+  geom_smooth(data = subset(data, Condition == "Narrative"), method = "lm", color = "darkturquoise", se = FALSE)+
+  labs(title = "Do parents with conspiracy belief intent to vaccinate their child?",
+       subtitle = "An experiment of different message types",
+       x = "MMR vaccination intention",
+       y = "Level of general conspiracy belief")+
+  theme_minimal()
+  
+```
+# This graph is for Hybrid Condition
+```{r}
+data %>% 
+  ggplot(aes(ï..GenConBlf, VacIntMMR))+
+  geom_point(color = "grey80")+
+  geom_point(data = filter(data, Condition == "Hybrid"), color = "chartreuse3")+
+  geom_smooth(data = subset(data, Condition == "Hybrid"), method = "lm", color = "chartreuse3", se = FALSE)+
+  labs(title = "Do parents with conspiracy belief intent to vaccinate their child?",
+       subtitle = "An experiment of different message types",
+       x = "MMR vaccination intention",
+       y = "Level of general conspiracy belief")+
+  theme_minimal()
+  
+```
+
+
+#Create Plot 2: This graph shows means of General Conspiracy Belief of each age group according to their self-identify political ideology.
+
+```{r}
+data <- data %>% group_by(SlfPolIdeo, age) %>% 
+  mutate(avg_GenCon = mean(ï..GenConBlf, na.rm = TRUE)) %>% 
+  ungroup()
+```
+
+
+```{r}
+data %>% filter(age != " ") %>% 
+  filter(SlfPolIdeo != "Other:") %>% 
+  ggplot(aes(age, avg_GenCon))+
+  geom_col(aes(fill = SlfPolIdeo), position = "dodge")+
+  labs(title = "Conspiracy belief in general of participants across age and political party",
+       x = "Age groups",
+       y = "Average conspiracy belief in general")+
+  scale_fill_manual(values = c("blue1", "darkmagenta", "firebrick2"),
+                     name = "Self-identified \npolitical party", 
+                     breaks =  c("Democrats", "Independents", "Republicans"),
+                     labels = c("Democrats", "Independents", "Republicans"))+
+  theme_minimal()
+```
+
+#Plot 3: I might want to create an animation showing that, compared to conspiracy beliefs in general, conspiracy belief likely higher among the same group of population.
+
+```{r}
+data$PolIdeo <- data$PolIdeo %>% factor(c("Very conservative", "Conservative", "Neither liberal nor conservative", "Liberal", "Very liberal"))
+data$Edu <- data$Edu %>% 
+  factor(c(levels = "High school degree or equivalent (e.g. GED)", "Some college, no degree", "Associate degree (e.g. AA, AS)", "Bachelor's degree (e.g. BA, BS)", "Master's degree (e.g., MA, MS, MEd)"))
+```
+
+```{r}
+data$Edu <- recode_factor(data$Edu, "High school degree or equivalent (e.g. GED)" = "High school degree", "Some college, no degree" = "Some College, no degree", "Associate degree (e.g. AA, AS)" = "Associate's degree", "Bachelor's degree (e.g. BA, BS)" = "Bachelor's degree", "Master's degree (e.g., MA, MS, MEd)" = "Master's degree")
+```
+
+```{r}
+data %>% filter(Edu != "NA") %>%  
+  ggplot(aes(x = PolIdeo, y = Edu))+
+  geom_tile(aes(fill = ï..GenConBlf), color = "white")+
+  scale_fill_viridis_c(option = "magma")+
+  labs(title = "Conspiracy belief in general of participants across political ideology and education",
+       x = "Political ideology",
+       y = "Degree of education")+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 25, hjust = 1),
+        legend.text)
+```
+```{r}
+data %>% filter(Edu != "NA") %>%  
+  ggplot(aes(x = PolIdeo, y = Edu))+
+  geom_tile(aes(fill = VacConBlf), color = "white")+
+  scale_fill_viridis_c(option = "magma")+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+```{r}
+data %>% filter(Gender == c("Female", "Male")) %>% 
+  ggplot(aes(ï..GenConBlf)) +
+  geom_density(aes(fill = Gender), alpha = .3)+
+  theme_minimal()
+```
+
+```{r}
+data %>% filter(Gender == c("Female", "Male")) %>% 
+  ggplot(aes(VacConBlf)) +
+  geom_density(aes(fill = Gender), alpha = .3)+
+  theme_minimal()
+```
