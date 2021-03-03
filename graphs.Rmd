@@ -4,28 +4,78 @@
 library(tidyverse)
 library(gghighlight)
 library(here)
+library(rio)
 ```
 
 ```{r}
 data <- read.csv(here("data.csv"))
+
+data <- data %>% 
+  mutate(GenConBlf = ï..GenConBlf) # I think this should fix your concern below about the variable name!
+
+# But I noticed you also have this .sav file in the repo, so I'm curious to check that out as an alternative to the .csv.
+
+datasav <- import(here("final_data.sav"))
+
+# just checking to see if these two data sets are the same
+
+data %>% 
+  colnames()
+
+datasav %>% 
+  colnames()
+
+data %>% 
+  select(VacConBlf) %>% 
+  head()
+
+datasav %>% 
+  select(VacConBlf) %>% 
+  head()
+
+data$VacConBlf
+datasav$VacConBlf
+
+# based on all of this it looks to be so
+
+data$VacConBlf == datasav$VacConBlf # i don't know why this is coming up with F's when visual inspection looks like they're identical... i'm going to assume they're the same...?
+
+# This df doesn't seem to have any variable name abnormalities, which is nice, but the main reason I like to use a .sav file over a .csv file is because it retains "attributes" about the variables, which can be really useful for things like knowing the exact question and sometimes for the names of factor levels, etc. But in this case it doesn't really matter which you use! Just thought I'd bring it up, though.
+
 ```
 
 # Create Plot 1: DV is Intention to vaccinate their fictional children.
-# P.S. I cannot rename one of my variables: from "ï..GenConBlf" into "GenConBlf". If you could, please let me know.
+# P.S. I cannot rename one of my variables: from "ï..GenConBlf" into "GenConBlf". If you could, please let me know. 
 
 ```{r}
-data %>% ggplot(aes(ï..GenConBlf, VacIntMMR))+
-  geom_point(aes(color = Condition), alpha = .3)+
+data %>% ggplot(aes(GenConBlf, VacIntMMR))+
+  geom_point(aes(color = Condition), alpha = .3, position = "jitter")+ # jitter is totally optional here; I thought it was interesting to try out b/c it appeared a lot of the dots were overlapping each other and mixing colors, making it difficult to see the true density of the colors across the plot. i think you can also adjust the level of jittering to something lower if this feels a little misleading.
   geom_smooth(aes(color = Condition), method = "lm", se = FALSE)+
-  labs(title = "Do parents with conspiracy belief intent to vaccinate their child?",
+  labs(title = "Do parents with conspiracy beliefs intend to vaccinate their child?", # small edit here to wording
        subtitle = "An experiment of different message types",
        x = "MMR vaccination intention",
        y = "Level of general conspiracy belief")+
-  scale_color_manual(values = c("orchid", "salmon", "darkturquoise", "chartreuse3"),
+  scale_color_manual(values = c("orchid", "salmon", "darkturquoise", "chartreuse3"), # are these colorblind accessible?
                      name = "Message Type", 
                      breaks =  c("Control", "Fact", "Narrative", "Hybrid"),
                      labels = c("No exposure", "Scientific Fact", "Narrative", "Hybrid"))+
-  theme_minimal()
+  theme_minimal()+
+  # it looks like both your x and y variables might be from Likert scale items, so the numbers are only as meaningful as the word anchors behind them. it might be helpful for your audience to have the axes labelled with the actual response options
+  scale_y_continuous(labels = c("none", "a little", "a medium amount", "kinda a lot", "really a lot"), # i made these up but you could fill this in with what they actually are
+                     breaks = 1:5, limits = c(1,5))+
+  scale_x_continuous(labels = c("definitely won't", "probably won't", "unsure", "probably will", "definitely will"),
+                     breaks = 1:5, limits = c(1,5))
+
+# or you could do it like this if you don't want any words
+
+  # scale_y_continuous(labels = c("none", "2", "3", "4", "really a lot"),
+  #                    breaks = 1:5, limits = c(1,5))+
+
+# or like this if you want something in between
+
+  # scale_x_continuous(labels = c("definitely won't", "2", "unsure", "4", "definitely will"),
+  #                    breaks = 1:5, limits = c(1,5))
+
   
 ```
 
@@ -33,7 +83,7 @@ data %>% ggplot(aes(ï..GenConBlf, VacIntMMR))+
 #This graph is for Control Condition.
 ```{r}
 data %>% 
-  ggplot(aes(ï..GenConBlf, VacIntMMR))+
+  ggplot(aes(GenConBlf, VacIntMMR))+
   geom_point(color = "grey80")+
   geom_point(data = filter(data, Condition == "Control"), color = "orchid")+
   geom_smooth(data = subset(data, Condition == "Control"), method = "lm", color = "orchid", se = FALSE)+
@@ -47,7 +97,7 @@ data %>%
 # This graph is for Fact Condition
 ```{r}
 data %>% 
-  ggplot(aes(ï..GenConBlf, VacIntMMR))+
+  ggplot(aes(GenConBlf, VacIntMMR))+
   geom_point(color = "grey80")+
   geom_point(data = filter(data, Condition == "Fact"), color = "salmon")+
   geom_smooth(data = subset(data, Condition == "Fact"), method = "lm", color = "salmon", se = FALSE)+
@@ -61,7 +111,7 @@ data %>%
 #This graph is for Narrative Condition
 ```{r}
 data %>% 
-  ggplot(aes(ï..GenConBlf, VacIntMMR))+
+  ggplot(aes(GenConBlf, VacIntMMR))+
   geom_point(color = "grey80")+
   geom_point(data = filter(data, Condition == "Narrative"), color = "darkturquoise")+
   geom_smooth(data = subset(data, Condition == "Narrative"), method = "lm", color = "darkturquoise", se = FALSE)+
@@ -75,7 +125,7 @@ data %>%
 # This graph is for Hybrid Condition
 ```{r}
 data %>% 
-  ggplot(aes(ï..GenConBlf, VacIntMMR))+
+  ggplot(aes(GenConBlf, VacIntMMR))+
   geom_point(color = "grey80")+
   geom_point(data = filter(data, Condition == "Hybrid"), color = "chartreuse3")+
   geom_smooth(data = subset(data, Condition == "Hybrid"), method = "lm", color = "chartreuse3", se = FALSE)+
@@ -92,7 +142,7 @@ data %>%
 
 ```{r}
 data <- data %>% group_by(SlfPolIdeo, age) %>% 
-  mutate(avg_GenCon = mean(ï..GenConBlf, na.rm = TRUE)) %>% 
+  mutate(avg_GenCon = mean(GenConBlf, na.rm = TRUE)) %>% 
   ungroup()
 ```
 
@@ -102,9 +152,9 @@ data %>% filter(age != " ") %>%
   filter(SlfPolIdeo != "Other:") %>% 
   ggplot(aes(age, avg_GenCon))+
   geom_col(aes(fill = SlfPolIdeo), position = "dodge")+
-  labs(title = "Conspiracy belief in general of participants across age and political party",
+  labs(title = "General conspiracy belief across age and political party",
        x = "Age groups",
-       y = "Average conspiracy belief in general")+
+       y = "Average general conspiracy belief")+
   scale_fill_manual(values = c("blue1", "darkmagenta", "firebrick2"),
                      name = "Self-identified \npolitical party", 
                      breaks =  c("Democrats", "Independents", "Republicans"),
@@ -127,9 +177,9 @@ data$Edu <- recode_factor(data$Edu, "High school degree or equivalent (e.g. GED)
 ```{r}
 data %>% filter(Edu != "NA") %>%  
   ggplot(aes(x = PolIdeo, y = Edu))+
-  geom_tile(aes(fill = ï..GenConBlf), color = "white")+
+  geom_tile(aes(fill = GenConBlf), color = "white")+
   scale_fill_viridis_c(option = "magma")+
-  labs(title = "Conspiracy belief in general of participants across political ideology and education",
+  labs(title = "General conspiracy belief across political ideology and education",
        x = "Political ideology",
        y = "Degree of education",
        fill = "General\nconspiracy\nbelief level")+
@@ -142,7 +192,7 @@ data %>% filter(Edu != "NA") %>%
   ggplot(aes(x = PolIdeo, y = Edu))+
   geom_tile(aes(fill = VacConBlf), color = "white")+
   scale_fill_viridis_c(option = "magma")+
-  labs(title = "Conspiracy belief in vaccination of participants across political ideology and education",
+  labs(title = "Vaccination conspiracy belief across political ideology and education",
        x = "Political ideology",
        y = "Degree of education",
        fill = "Vaccination\nconspiracy\nbelief level")+
@@ -154,7 +204,7 @@ data %>% filter(Edu != "NA") %>%
 #Plot 4:
 ```{r}
 data %>% filter(Gender == c("Female", "Male")) %>% 
-  ggplot(aes(ï..GenConBlf)) +
+  ggplot(aes(GenConBlf)) +
   geom_density(aes(fill = Gender), color = "white", alpha = .3)+
   labs(title = "Males vs Females: Who has higher general conspiracy belief?",
        x = "Level of general conspiracy belief",
