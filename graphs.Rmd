@@ -224,7 +224,7 @@ data$Edu <- data$Edu %>%
 ```
 
 ```{r}
-data$Edu <- recode_factor(data$Edu, "High school degree or equivalent (e.g. GED)" = "High school degree", "Some college, no degree" = "Some College, no degree", "Associate degree (e.g. AA, AS)" = "Associate's degree", "Bachelor's degree (e.g. BA, BS)" = "Bachelor's degree", "Master's degree (e.g., MA, MS, MEd)" = "Master's degree")
+data$Edu <- recode_factor(data$Edu, "High school degree or equivalent (e.g. GED)" = "High school degree", "Some college, no degree" = "Some college, no degree", "Associate degree (e.g. AA, AS)" = "Associate's degree", "Bachelor's degree (e.g. BA, BS)" = "Bachelor's degree", "Master's degree (e.g., MA, MS, MEd)" = "Master's degree")
 ```
 
 ```{r}
@@ -232,14 +232,42 @@ data %>%
   filter(Edu != "NA") %>%  
   ggplot(aes(x = PolIdeo, y = Edu))+
   geom_tile(aes(fill = GenConBlf), color = "white")+
-  scale_fill_viridis_c(option = "magma")+
-  labs(title = "General conspiracy belief across political ideology and education",
+  scale_fill_viridis_c(option = "magma")+ # this color palette looks really nice!
+  labs(title = "General conspiracy beliefs across political ideology and education",
        x = "Political ideology",
        y = "Degree of education",
        fill = "General\nconspiracy\nbelief level")+
   theme_minimal()+
   theme(plot.title = element_text(hjust = 0.65),
     axis.text.x = element_text(angle = 25, hjust = 1))
+
+# i'd again make a little summary df for the plot and then also you can use that to facet wrap
+
+plot3 <- data %>% 
+  select(PolIdeo, Edu, GenConBlf, VacConBlf) %>% 
+  na.omit() %>% 
+  pivot_longer(GenConBlf:VacConBlf, names_to = "Domain", values_to = "Beliefs") 
+
+plot3 <- plot3 %>% 
+  mutate(Domain = plyr::revalue(as.factor(Domain),
+                                c("GenConBlf" = "General Conspiracy Beliefs", # make that look prettier for plot
+                                  "VacConBlf" = "Vaccine Conspiracy Beliefs")))
+
+# and now we can facet wrap to have both of your plots merged into 1
+
+plot3 %>% 
+  ggplot(aes(x = PolIdeo, y = Edu)) +
+  geom_tile(aes(fill = Beliefs), color = "white") +
+  scale_fill_viridis_c(option = "magma") +
+  facet_wrap(~Domain) +
+  theme(legend.position = "top",
+        plot.title = element_text(hjust = 0.60),
+        axis.text.x = element_text(angle = 25, hjust = 1),
+        plot.title.position = "plot") +
+  labs(title = "Vaccination conspiracy beliefs across education and political ideology",
+       x = "Political ideology",
+       y = NULL, # just to give you extra space since how you've labelled it makes it nicely self-explanatory in my opinion
+       fill = "Vaccination conspiracy belief level")
 ```
 
 ```{r}
@@ -248,7 +276,7 @@ data %>%
   ggplot(aes(x = PolIdeo, y = Edu))+
   geom_tile(aes(fill = VacConBlf), color = "white")+
   scale_fill_viridis_c(option = "magma")+
-  labs(title = "Vaccination conspiracy belief across political ideology and education",
+  labs(title = "Vaccination conspiracy beliefs across political ideology and education",
        x = "Political ideology",
        y = "Degree of education",
        fill = "Vaccination\nconspiracy\nbelief level")+
