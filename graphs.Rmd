@@ -66,7 +66,7 @@ data %>% ggplot(aes(GenConBlf, VacIntMMR))+
   scale_x_continuous(labels = c("definitely won't", "probably won't", "unsure", "probably will", "definitely will"),
                      breaks = 1:5, limits = c(1,5))
 
-# or you could do it like this if you don't want any words
+# or you could do it like this if you don't want as many words
 
   # scale_y_continuous(labels = c("none", "2", "3", "4", "really a lot"),
   #                    breaks = 1:5, limits = c(1,5))+
