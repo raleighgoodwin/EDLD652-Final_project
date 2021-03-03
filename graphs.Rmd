@@ -76,6 +76,7 @@ data %>% ggplot(aes(GenConBlf, VacIntMMR))+
   # scale_x_continuous(labels = c("definitely won't", "2", "unsure", "4", "definitely will"),
   #                    breaks = 1:5, limits = c(1,5))
 
+# could also be useful to add confidence bands here
   
 ```
 
@@ -141,14 +142,40 @@ data %>%
 #Create Plot 2: This graph shows means of General Conspiracy Belief of each age group according to their self-identify political ideology.
 
 ```{r}
-data <- data %>% group_by(SlfPolIdeo, age) %>% 
+data <- data %>% 
+  group_by(SlfPolIdeo, age) %>% 
   mutate(avg_GenCon = mean(GenConBlf, na.rm = TRUE)) %>% 
   ungroup()
+
+# i'm looking at plot 2 and wondering where the 18-20 year old democrats are
+
+data %>% 
+  dplyr::group_by(SlfPolIdeo, age) %>% 
+  dplyr::summarise(n = n())
+
+# is it the top row in this data wherein ideology and age are blank? i'm looking at the data set now and I don't think so? it looks like there's a chunk of people who completed anywhere from 50-90% of the survey and skipped all the demographics and possibly other questions as well. i would consider filtering out those people at the beginning of the document right after importing the data. 
+
+# this would do it: 
+
+datacomp <- data %>% 
+  filter(Progress > 90)
+
+# but that doesn't really solve the mystery of the missing democrats. i guess it seems that there just are none in your sample. that's funny!
+
+data %>% 
+  dplyr::group_by(age) %>% 
+  dplyr::summarise(n = n())
+
+# given how few people there are in the 18-20 year old category, i would consider just excluding that age group from the plot (and possibly also the 51-60 year olds), since the group sizes are really just too small to get meaningful averages from
+
+
+
 ```
 
 
 ```{r}
-data %>% filter(age != " ") %>% 
+data %>% 
+  filter(age != " ") %>% 
   filter(SlfPolIdeo != "Other:") %>% 
   ggplot(aes(age, avg_GenCon))+
   geom_col(aes(fill = SlfPolIdeo), position = "dodge")+
@@ -160,12 +187,38 @@ data %>% filter(age != " ") %>%
                      breaks =  c("Democrats", "Independents", "Republicans"),
                      labels = c("Democrats", "Independents", "Republicans"))+
   theme_minimal()
+
+# i'd create a little summary dataframe to use for my plot and in the process i can cleanly filter for desired age and ideology
+
+plot2 <- datacomp %>% 
+  filter(age == "21-30 years old" | age == "31-40 years old" | age == "41-50 years old") %>% 
+  filter(SlfPolIdeo != "Other:") %>% 
+  dplyr::group_by(SlfPolIdeo, age) %>% 
+  dplyr::summarise(avg_GenCon = mean(GenConBlf, na.rm = T))
+
+plot2 %>% 
+  ggplot(aes(age, avg_GenCon))+
+  geom_col(aes(fill = SlfPolIdeo), position = "dodge")+
+  labs(title = "General conspiracy beliefs across age and political party",
+       x = "Age",
+       y = "Average general conspiracy belief")+
+  scale_fill_manual(values = c("blue1", "darkmagenta", "firebrick2"),# I like that these are color coded in a meaningful way for the topic! I know Daniel mentioned there's a way to double check that your colors you're using a colorblind accessible. might be worth taking a look at just to be sure
+                     name = "Self-identified \npolitical party", 
+                     breaks =  c("Democrats", "Independents", "Republicans"),
+                     labels = c("Democrats", "Independents", "Republicans"))+
+  theme_minimal()+
+  scale_y_continuous(limits = c(0,5)) + # would extend scale to include whole range of response options since it's just 1-5. i wonder also consider relabelling y axis to use the response options like i did in plot 1
+  theme(legend.position = "top") # or if you wanted you could stick it on the bottom or really wherever you like
+
+# i also think it could be useful to have error bars here
+
 ```
 
 #Plot 3: I might want to create an animation showing that, compared to conspiracy beliefs in general, conspiracy belief likely higher among the same group of population.
 
 ```{r}
-data$PolIdeo <- data$PolIdeo %>% factor(c("Very conservative", "Conservative", "Neither liberal nor conservative", "Liberal", "Very liberal"))
+data$PolIdeo <- data$PolIdeo %>% 
+  factor(c("Very conservative", "Conservative", "Neither liberal nor conservative", "Liberal", "Very liberal"))
 data$Edu <- data$Edu %>% 
   factor(c(levels = "High school degree or equivalent (e.g. GED)", "Some college, no degree", "Associate degree (e.g. AA, AS)", "Bachelor's degree (e.g. BA, BS)", "Master's degree (e.g., MA, MS, MEd)"))
 ```
@@ -175,7 +228,8 @@ data$Edu <- recode_factor(data$Edu, "High school degree or equivalent (e.g. GED)
 ```
 
 ```{r}
-data %>% filter(Edu != "NA") %>%  
+data %>% 
+  filter(Edu != "NA") %>%  
   ggplot(aes(x = PolIdeo, y = Edu))+
   geom_tile(aes(fill = GenConBlf), color = "white")+
   scale_fill_viridis_c(option = "magma")+
@@ -187,8 +241,10 @@ data %>% filter(Edu != "NA") %>%
   theme(plot.title = element_text(hjust = 0.65),
     axis.text.x = element_text(angle = 25, hjust = 1))
 ```
+
 ```{r}
-data %>% filter(Edu != "NA") %>%  
+data %>% 
+  filter(Edu != "NA") %>%  
   ggplot(aes(x = PolIdeo, y = Edu))+
   geom_tile(aes(fill = VacConBlf), color = "white")+
   scale_fill_viridis_c(option = "magma")+
@@ -203,7 +259,8 @@ data %>% filter(Edu != "NA") %>%
 
 #Plot 4:
 ```{r}
-data %>% filter(Gender == c("Female", "Male")) %>% 
+data %>% 
+  filter(Gender == c("Female", "Male")) %>% 
   ggplot(aes(GenConBlf)) +
   geom_density(aes(fill = Gender), color = "white", alpha = .3)+
   labs(title = "Males vs Females: Who has higher general conspiracy belief?",
@@ -214,7 +271,8 @@ data %>% filter(Gender == c("Female", "Male")) %>%
 ```
 
 ```{r}
-data %>% filter(Gender == c("Female", "Male")) %>% 
+data %>% 
+  filter(Gender == c("Female", "Male")) %>% 
   ggplot(aes(VacConBlf)) +
   geom_density(aes(fill = Gender), color = "white", alpha = .3)+
   labs(title = "Males vs Females: Who has higher vaccination conspiracy belief?",
