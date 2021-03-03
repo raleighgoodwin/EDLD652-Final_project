@@ -296,6 +296,10 @@ data %>%
        y = "Density")+
   theme_minimal()+
   theme(plot.title = element_text(hjust = 0.5))
+
+# most of my suggested edits here are things i've mentioned in previous plots. i would consider doing something similar here to plot 3 where you facet wrap and also labelling the x axis to have more meaningful labels in some way by incorporating text. i would also check to make sure these colors are colorblind accessible.
+
+# my overall impression i get based on these plots is that these distributions roughly look pretty similar even though they of course aren't exactly identical. it might be fun to add vertical lines for the mean, median, and modes for males and females. what these plots make me really want to know is whether these potential differences in means are significant. that might be useful information to include in the text that accompanies the figures in your final product.
 ```
 
 ```{r}
